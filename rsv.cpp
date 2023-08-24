@@ -48,8 +48,14 @@ auto next_sep(const char* beg, const char* end, char sep)
         std::exit(1);
     }
 
-    while(*beg != sep && beg < end)
+    bool on_quote = false;
+
+    while(beg < end && (*beg != sep || on_quote))
+    {
+        if(*beg == '\"')
+            on_quote = !on_quote;
         beg++;
+    }
     
     
     return beg;
