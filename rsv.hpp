@@ -1,5 +1,6 @@
 #include <charconv>
 #include <string>
+#include <type_traits>
 #include <vector>
 #include <iostream>
 
@@ -21,29 +22,21 @@ namespace rsv
             return value;
         }
 
-        // TODO: remove redundancy
         template<typename T>
-        void delegate(const std::string_view& src, void* dst) = delete;
+        #ifdef __cpp_lib_concepts
+        requires (std::integral<T> || std::floating_point<T> || std::same_as<T, std::string>) && (!std::same_as<T, bool>)
+        #endif
+        void delegate(const std::string_view& src, void* dst)
+        {
+            auto* casted = static_cast<std::vector<T>*>(dst);;
+            casted->emplace_back(to_num<T>(src));
+        }
 
         template<>
         inline void delegate<std::string>(const std::string_view& src, void* dst)
         {
             auto* casted = static_cast<std::vector<std::string>*>(dst);;
             casted->emplace_back(src.begin(), src.end());
-        }
-
-        template<>
-        inline void delegate<float>(const std::string_view& src, void* dst)
-        {
-            auto* casted = static_cast<std::vector<float>*>(dst);;
-            casted->emplace_back(to_num<float>(src));
-        }
-
-        template<>
-        inline void delegate<int32_t>(const std::string_view& src, void* dst)
-        {
-            auto* casted = static_cast<std::vector<int32_t>*>(dst);;
-            casted->emplace_back(to_num<int32_t>(src));
         }
 
         struct field
