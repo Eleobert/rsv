@@ -1,8 +1,10 @@
 #include <charconv>
+#include <fstream>
 #include <string>
 #include <type_traits>
 #include <vector>
 #include <iostream>
+#include <tuple>
 
 namespace rsv
 {
@@ -48,10 +50,26 @@ namespace rsv
         };
     }
 
+    auto open(const std::string& name) -> std::tuple<std::ifstream, std::error_condition>;
+
+    // TODO: rsv::columns should not reset the file cursor. Fixing this is not
+    // straightforward since tellg/seekg does not work very well in conjunction
+    // on windows when file is open in text mode.
+
+    // TODO: consider not to pass 'sep' to rsv::columns since it is also passed
+    // to rsv::read. Peharps it would be better to set it as an atrribute of file
+    // (pass to rsv::open, once).
+
+    /**
+    * Return the list of column names
+    * @param file input file. Resets the the cursor to the beginning of the file.
+    */
+    auto columns(std::ifstream& file, char sep) -> std::vector<std::string>;
+
     auto schema(std::vector<internal::field> fields) -> std::vector<internal::field>;
 
     // TODO: probably it is better to receive schema as positional argument
-    auto read(const std::string& filename, const std::vector<internal::field>& sch, char sep = '\t') -> void;
+    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep = '\t') -> void;
     
 
     template <typename T>

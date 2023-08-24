@@ -1,23 +1,14 @@
 #include "rsv.hpp"
 
+#include <cassert>
+#include <cerrno>
 #include <cstdint>
+#include <system_error>
 #include <vector>
 #include <iostream>
 #include <fstream>
 #include <ranges>
 
-
-// TODO: file should be open outside, so that the user can better manage opening errors
-auto open(const std::string& name)
-{
-    std::ifstream file(name);
-
-    if(not file.good())
-    {
-        std::perror(name.c_str());
-    }
-    return file;
-}
 
 auto find_positions(const std::string& line, const std::vector<rsv::internal::field>& fields, char sep)
 {
@@ -63,6 +54,39 @@ auto next_sep(const char* beg, const char* end, char sep)
 
 namespace rsv
 {
+    /**
+    * Why not simply use ifstream.open?
+    * : Because I plan to experiment with mapped file, so
+    *   I will have to use custom streams.
+    */
+    auto open(const std::string& name) -> std::tuple<std::ifstream, std::error_condition>
+    {
+        std::ifstream file(name);
+        auto err = std::error_condition();
+        if(not file.good())
+        {
+            err = std::system_category().default_error_condition(errno);
+        }
+        return {std::move(file), err};
+    }
+
+    auto columns(std::ifstream& file, char sep) -> std::vector<std::string>
+    {
+        file.seekg(0);
+        assert(file.good());
+        auto line = std::string();
+        std::getline(file, line);
+
+        auto column_names = std::vector<std::string>();
+
+        for (const auto& column_name: std::views::split(line, sep))
+        {
+            column_names.emplace_back(column_name.begin(), column_name.end());
+        }
+        file.seekg(0);
+        return column_names;
+    }
+
     auto schema(std::vector<internal::field> fields) -> std::vector<internal::field>
     {
         // do nothing
@@ -70,9 +94,10 @@ namespace rsv
     }
 
     // TODO: probably it is better to receive schema as positional argument
-    auto read(const std::string& filename, const std::vector<internal::field>& sch, char sep) -> void
+    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep) -> void
     {
-        auto file = open(filename);
+        file.seekg(0);
+        assert(file.good());
         auto line = std::string();
         std::getline(file, line);
         auto pos  = find_positions(line, sch, sep);

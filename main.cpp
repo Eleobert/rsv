@@ -1,5 +1,7 @@
 #include "rsv.hpp"
 
+#include <cstdlib>
+#include <system_error>
 #include <vector>
 #include <iostream>
 
@@ -10,6 +12,14 @@ int main()
     auto charge    = std::vector<int>();
     auto ascesions = std::vector<std::string>();
     auto score     = std::vector<float>();
+
+    auto [file, econd] = rsv::open("tst.tsv");
+
+    if(econd)
+    {
+        std::cerr << econd.message() << '\n';
+        std::exit(1);
+    }
 
     auto schema = rsv::schema({
         rsv::f("charge"   , charge),
@@ -25,7 +35,17 @@ int main()
     //     rsv::f(3 , score)}
     // );
 
-    rsv::read("tst.tsv", schema, '\t');
+    rsv::read(file, schema, '\t');
+
+
+    auto cols   = rsv::columns(file, '\t');
+    
+    for(auto e: cols)
+    {
+        std::cout << e << '\t';
+    }
+
+    std::cout << '\n';
 
     for(size_t i = 0; i < sequence.size(); i++)
     {
