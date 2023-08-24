@@ -1,3 +1,4 @@
+#include <cstdint>
 #include <string>
 #include <vector>
 #include <iostream>
@@ -51,7 +52,8 @@ namespace rsv
         struct field
         {
             std::string name;
-            void* data;
+            int64_t pos = -1;
+            void* data = nullptr;
             decltype(delegate<std::string>)* del = nullptr;
         };
 
@@ -78,7 +80,7 @@ namespace rsv
                 
                 for(size_t i = 0; i < fields.size(); i++)
                 {
-                    if(fields[i].name == cname)
+                    if(fields[i].pos == (std::ssize(pos) - 1) || fields[i].name == cname)
                     {
                         pos.back() = i;
                         break;
@@ -111,7 +113,16 @@ namespace rsv
         this_field.name = name;
         this_field.data = &data;
         this_field.del  = internal::delegate<T>;
-        
+        return this_field;
+    }
+
+    template <typename T>
+    auto f(int64_t pos, std::vector<T>& data)
+    {
+        auto this_field = internal::field();
+        this_field.pos  = pos;
+        this_field.data = &data;
+        this_field.del  = internal::delegate<T>;
         return this_field;
     }
 
@@ -121,6 +132,7 @@ namespace rsv
         return fields;
     }
 
+    // TODO: probably it is better to receive schema as positional argument
     auto read(const std::string& filename, const std::vector<internal::field>& sch, char sep = '\t')
     {
         auto file = internal::open(filename);
@@ -159,11 +171,18 @@ int main()
     auto score     = std::vector<float>();
 
     auto schema = rsv::schema({
-        rsv::f("charge"   , charge),
-        rsv::f("ascesions", ascesions),
-        rsv::f("sequence" , sequence),
-        rsv::f("score"    , score)}
+        rsv::f(1 , charge),
+        rsv::f(2 , ascesions),
+        rsv::f(0 , sequence),
+        rsv::f(3 , score)}
     );
+
+    // auto schema = rsv::schema({
+    //     rsv::f(1 , charge),
+    //     rsv::f(2 , ascesions),
+    //     rsv::f(0 , sequence),
+    //     rsv::f(3 , score)}
+    // );
 
     rsv::read("tst.tsv", schema, '\t');
 
