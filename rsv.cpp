@@ -81,6 +81,10 @@ namespace rsv
         {
             auto line = std::string();
             std::getline(file, line);
+
+            if(line.empty())
+                continue;
+
             const auto* beg  = line.data();
 
             for(size_t i = 0; i < pos.size(); i++)
