@@ -83,7 +83,7 @@ namespace rsv
             std::getline(file, line);
             const auto* beg  = line.data();
 
-            for(size_t i = 0; i < sch.size(); i++)
+            for(size_t i = 0; i < pos.size(); i++)
             {
                 auto p = pos[i];
 
