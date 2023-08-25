@@ -83,7 +83,15 @@ namespace rsv
 
     auto schema(std::vector<internal::field> fields) -> std::vector<internal::field>;
 
-    // TODO: probably it is better to receive schema as positional argument
+    /**
+    * Reads separated values. The function assumes that all column names are present 
+    * in the file, otherwise the program will be aborted. To avoid this, the user can
+    * inspect for missing columns by calling rsv::columns before calling rsv::read.
+    * @param file the cursor will be set to the start to the file before reading values.
+    * Upon returning the cursor will be at the end.
+    * @param sep the delimiter. The delimiter will be ignored if it appears witthin 
+    * double quotes.
+    */
     auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep = '\t') -> void;
     
 

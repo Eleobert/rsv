@@ -1,8 +1,11 @@
 #include "rsv.hpp"
 
+#include <algorithm>
 #include <cassert>
 #include <cerrno>
 #include <cstdint>
+#include <cstdlib>
+#include <exception>
 #include <system_error>
 #include <vector>
 #include <iostream>
@@ -10,13 +13,15 @@
 #include <ranges>
 
 
-auto find_positions(const std::string& line, const std::vector<rsv::internal::field>& fields, char sep)
-{
-    auto pos = std::vector<int64_t>();
 
-    for (const auto& column_name: std::views::split(line, sep))
+// FIXME: this is too slow
+auto find_positions(const std::vector<std::string>& column_names, const std::vector<rsv::internal::field>& fields)
+{
+    auto pos   = std::vector<int64_t>();
+    auto found = std::vector<int8_t>(fields.size());
+
+    for (const auto& cname: column_names)
     {
-        const auto cname = std::string_view(column_name.begin(), column_name.end());
         pos.push_back(-1);
         
         for(size_t i = 0; i < fields.size(); i++)
@@ -24,10 +29,21 @@ auto find_positions(const std::string& line, const std::vector<rsv::internal::fi
             if(fields[i].pos == (std::ssize(pos) - 1) || fields[i].name == cname)
             {
                 pos.back() = i;
+                found[i]   = 1;
                 break;
             }
         }
     }
+
+    if(auto it = std::ranges::find(found, 0); it != found.end())
+    {
+        auto i = it - found.begin();
+        // The programmer should not let this happen. Use rsv::columns to
+        // inspect columns.
+        std::cerr << "rsv: column '" << fields[i].name << "' not present\n";
+        std::abort(); 
+    }
+
     return pos;
 }
 
@@ -35,8 +51,7 @@ auto next_sep(const char* beg, const char* end, char sep)
 {
     if(beg >= end)
     {
-        std::cerr << "missing value!\n";
-        std::exit(1);
+        return end;
     }
 
     bool on_quote = false;
@@ -47,10 +62,9 @@ auto next_sep(const char* beg, const char* end, char sep)
             on_quote = !on_quote;
         beg++;
     }
-    
-    
     return beg;
 }
+
 
 namespace rsv
 {
@@ -93,19 +107,21 @@ namespace rsv
         return fields;
     }
 
-    // TODO: probably it is better to receive schema as positional argument
     auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep) -> void
     {
         file.seekg(0);
         assert(file.good());
         auto line = std::string();
+        auto pos  = find_positions(columns(file, sep), sch);
+
+        // skip first line
         std::getline(file, line);
-        auto pos  = find_positions(line, sch, sep);
 
         while(not file.eof())
         {
-            auto line = std::string();
+            auto line  = std::string();
             std::getline(file, line);
+            auto count = int64_t(0);
 
             if(line.empty())
                 continue;
@@ -123,6 +139,15 @@ namespace rsv
                 auto view = std::string_view(beg, end);
                 sch[p].del(view, sch[p].data);
                 beg = end + 1;
+
+                count++;
+
+                // if we reach the end of line but still have fields to process
+                if(count != std::ssize(sch) and end == line.data() + line.size())
+                {
+                    std::cerr << "missing fields!!\n";
+                    std::exit(1);
+                }
             }
         }
     }

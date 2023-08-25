@@ -28,17 +28,9 @@ int main()
         rsv::f("score"    , score)}
     );
 
-    // auto schema = rsv::schema({
-    //     rsv::f(1 , charge),
-    //     rsv::f(2 , ascesions),
-    //     rsv::f(0 , sequence),
-    //     rsv::f(3 , score)}
-    // );
-
     rsv::read(file, schema, '\t');
 
-
-    auto cols   = rsv::columns(file, '\t');
+    auto cols = rsv::columns(file, '\t');
     
     for(auto e: cols)
     {
