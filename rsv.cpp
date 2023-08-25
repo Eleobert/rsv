@@ -26,7 +26,9 @@ auto find_positions(const std::vector<std::string>& column_names, const std::vec
         
         for(size_t i = 0; i < fields.size(); i++)
         {
-            if(fields[i].pos == (std::ssize(pos) - 1) || fields[i].name == cname)
+            if(fields[i].pos == (std::ssize(pos) - 1) ||
+              (fields[i].pos < 0 && (std::ssize(column_names) + fields[i].pos == (std::ssize(pos) - 1))) ||
+               fields[i].name == cname)
             {
                 pos.back() = i;
                 found[i]   = 1;

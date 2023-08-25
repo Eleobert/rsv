@@ -1,4 +1,5 @@
 #include <charconv>
+#include <cstdint>
 #include <fstream>
 #include <limits>
 #include <string>
@@ -59,7 +60,7 @@ namespace rsv
         struct field
         {
             std::string name;
-            int64_t pos = -1;
+            int64_t pos = std::numeric_limits<int64_t>::max();
             void* data = nullptr;
             decltype(delegate<std::string>)* del = nullptr;
         };
