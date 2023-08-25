@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
+#include <string>
 #include <system_error>
 #include <vector>
 #include <iostream>
@@ -92,6 +93,16 @@ auto read_row(std::ifstream& file, std::string& row)
     return row;
 }
 
+auto skip_rows(std::ifstream& file, int64_t n)
+{
+    auto buffer = std::string();
+
+    for(int64_t i = 0; i < n; i++)
+    {
+        read_row(file, buffer);
+    }
+}
+
 
 namespace rsv
 {
@@ -128,12 +139,13 @@ namespace rsv
         return column_names;
     }
 
-    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep) -> void
+    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep, options opts) -> void
     {
         file.seekg(0);
         assert(file.good());
         auto pos  = find_positions(columns(file, sep), sch);
         auto line = std::string();
+        skip_rows(file, opts.skip);
         // skip first line
         std::getline(file, line);
 

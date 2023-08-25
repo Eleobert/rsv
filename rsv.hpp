@@ -66,6 +66,11 @@ namespace rsv
         };
     }
 
+    struct options
+    {
+        int64_t skip = 0;
+    };
+
     using schema = std::vector<internal::field>;
 
     auto open(const std::string& name) -> std::tuple<std::ifstream, std::error_condition>;
@@ -93,7 +98,7 @@ namespace rsv
     * @param sep the delimiter. The delimiter will be ignored if it appears witthin 
     * double quotes.
     */
-    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep = '\t') -> void;
+    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep = '\t', options opts = options()) -> void;
     
 
     template <typename T>
