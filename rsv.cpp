@@ -66,6 +66,31 @@ auto next_sep(const char* beg, const char* end, char sep)
 }
 
 
+auto read_row(std::ifstream& file, std::string& row)
+{
+    auto on_quote = false;
+
+    do
+    {
+        auto buffer = std::string();
+        std::getline(file, buffer);
+
+        if(not row.empty())
+            row += '\n';
+
+        for(auto c: buffer)
+        {
+            if(c == '\"')
+                on_quote = !on_quote;
+        }
+        row += buffer;
+    }
+    while(on_quote);
+
+    return row;
+}
+
+
 namespace rsv
 {
     /**
@@ -111,16 +136,15 @@ namespace rsv
     {
         file.seekg(0);
         assert(file.good());
-        auto line = std::string();
         auto pos  = find_positions(columns(file, sep), sch);
-
+        auto line = std::string();
         // skip first line
         std::getline(file, line);
 
         while(not file.eof())
         {
             auto line  = std::string();
-            std::getline(file, line);
+            read_row(file, line);
             auto count = int64_t(0);
 
             if(line.empty())
