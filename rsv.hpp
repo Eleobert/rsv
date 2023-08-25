@@ -68,7 +68,8 @@ namespace rsv
 
     struct options
     {
-        int64_t skip = 0;
+        int64_t skip  = 0;
+        int64_t nrows = std::numeric_limits<int64_t>::max();
     };
 
     using schema = std::vector<internal::field>;

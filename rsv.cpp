@@ -143,13 +143,15 @@ namespace rsv
     {
         file.seekg(0);
         assert(file.good());
-        auto pos  = find_positions(columns(file, sep), sch);
-        auto line = std::string();
+        auto pos   = find_positions(columns(file, sep), sch);
+        auto line  = std::string();
+        auto nread = int64_t(0);
+
         skip_rows(file, opts.skip);
         // skip first line
         std::getline(file, line);
 
-        while(not file.eof())
+        while(not file.eof() and nread < opts.nrows)
         {
             auto line  = std::string();
             read_row(file, line);
@@ -181,6 +183,7 @@ namespace rsv
                     std::exit(1);
                 }
             }
+            nread++;
         }
     }
 };

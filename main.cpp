@@ -28,7 +28,7 @@ int main()
         rsv::f("score"    , score)}
     );
 
-    rsv::read(file, schema, '\t', {.skip = 2});
+    rsv::read(file, schema, '\t');
 
     auto cols = rsv::columns(file, '\t');
     
