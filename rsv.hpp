@@ -1,5 +1,6 @@
 #include <charconv>
 #include <fstream>
+#include <limits>
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -14,13 +15,27 @@ namespace rsv
         auto to_num(const std::string_view& str)
         {
             T value = 0;
-            auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
-
-            if(ec != std::errc())
+            
+            if constexpr (std::is_integral<T>::value)
             {
-                std::cerr << "Error converting value '" << str << "'\n";
-                std::exit(1);
+                value = std::numeric_limits<T>::max();
             }
+            else
+            {
+                value = std::numeric_limits<T>::quiet_NaN();
+            }
+
+            if(not str.empty()) [[likely]]
+            {
+                auto [ptr, ec] = std::from_chars(str.data(), str.data() + str.size(), value);
+
+                if(ec != std::errc())
+                {
+                    std::cerr << "Error converting value '" << str << "'\n";
+                    std::exit(1);
+                }
+            }
+
             return value;
         }
 
