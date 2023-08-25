@@ -65,6 +65,8 @@ namespace rsv
         };
     }
 
+    using schema = std::vector<internal::field>;
+
     auto open(const std::string& name) -> std::tuple<std::ifstream, std::error_condition>;
 
     // TODO: rsv::columns should not reset the file cursor. Fixing this is not
@@ -80,8 +82,6 @@ namespace rsv
     * @param file input file. Resets the the cursor to the beginning of the file.
     */
     auto columns(std::ifstream& file, char sep) -> std::vector<std::string>;
-
-    auto schema(std::vector<internal::field> fields) -> std::vector<internal::field>;
 
     /**
     * Reads separated values. The function assumes that all column names are present 

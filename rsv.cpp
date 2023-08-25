@@ -126,12 +126,6 @@ namespace rsv
         return column_names;
     }
 
-    auto schema(std::vector<internal::field> fields) -> std::vector<internal::field>
-    {
-        // do nothing
-        return fields;
-    }
-
     auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep) -> void
     {
         file.seekg(0);
