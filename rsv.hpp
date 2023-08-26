@@ -70,6 +70,7 @@ namespace rsv
     {
         int64_t skip  = 0;
         int64_t nrows = std::numeric_limits<int64_t>::max();
+        bool header   = true;
     };
 
     using schema = std::vector<internal::field>;

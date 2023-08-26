@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cerrno>
+#include <cstddef>
 #include <cstdint>
 #include <cstdlib>
 #include <exception>
@@ -13,26 +14,45 @@
 #include <fstream>
 #include <ranges>
 
-
+auto abort_if_needs_header(const std::vector<rsv::internal::field>& fields)
+{
+    for(size_t j = 0; j < fields.size(); j++)
+    {
+        if(not fields[j].name.empty())
+        {
+            std::cerr << "cannot find column '" << fields[j].name << "' because header is disabled";
+            std::abort();
+        }
+    }
+}
 
 // FIXME: this is too slow
-auto find_positions(const std::vector<std::string>& column_names, const std::vector<rsv::internal::field>& fields)
+// if header is false columns are not 'columns', but we still use it
+// to know how many fields are there 
+auto find_positions(const std::vector<std::string>& column_names,
+                    const std::vector<rsv::internal::field>& fields, 
+                    bool header)
 {
+    if(not header)
+    {
+        abort_if_needs_header(fields);
+    }
+
     auto pos   = std::vector<int64_t>();
     auto found = std::vector<int8_t>(fields.size());
 
-    for (const auto& cname: column_names)
+    for (size_t i = 0; i < column_names.size(); i++)
     {
         pos.push_back(-1);
         
-        for(size_t i = 0; i < fields.size(); i++)
+        for(size_t j = 0; j < fields.size(); j++)
         {
-            if(fields[i].pos == (std::ssize(pos) - 1) ||
-              (fields[i].pos < 0 && (std::ssize(column_names) + fields[i].pos == (std::ssize(pos) - 1))) ||
-               fields[i].name == cname)
+            if(fields[j].pos == (std::ssize(pos) - 1) ||
+              (fields[j].pos < 0 && (std::ssize(column_names) + fields[j].pos == (std::ssize(pos) - 1))) ||
+               header && fields[j].name == column_names[i])
             {
-                pos.back() = i;
-                found[i]   = 1;
+                pos.back() = j;
+                found[j]   = 1;
                 break;
             }
         }
@@ -143,9 +163,14 @@ namespace rsv
     {
         file.seekg(0);
         assert(file.good());
-        auto pos   = find_positions(columns(file, sep), sch);
+        auto pos   = find_positions(columns(file, sep), sch, opts.header);
         auto line  = std::string();
         auto nread = int64_t(0);
+
+        if(not opts.header)
+        {
+            file.seekg(0);
+        }
 
         skip_rows(file, opts.skip);
         // skip first line
