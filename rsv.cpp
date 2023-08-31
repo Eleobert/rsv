@@ -74,7 +74,7 @@ auto next_sep(const char* beg, const char* end, char sep)
 {
     if(beg >= end)
     {
-        return end;
+        return beg;
     }
 
     bool on_quote = false;
@@ -113,6 +113,7 @@ auto read_row(std::ifstream& file, std::string& row)
     return row;
 }
 
+
 auto skip_rows(std::ifstream& file, int64_t n)
 {
     auto buffer = std::string();
@@ -123,6 +124,14 @@ auto skip_rows(std::ifstream& file, int64_t n)
     }
 }
 
+auto fill_nulls(int64_t i, const rsv::schema& sch, std::vector<int64_t>& pos)
+{
+    for(; i < std::ssize(pos); i++)
+    {
+        auto p = pos[i];
+        sch[p].del(std::string_view(), sch[p].data);
+    }
+}
 
 namespace rsv
 {
@@ -194,19 +203,16 @@ namespace rsv
                 if(p < 0)
                     continue;
 
-                auto end  = next_sep(beg, line.data() + line.size(), sep);
-                auto view = std::string_view(beg, end);
-                sch[p].del(view, sch[p].data);
-                beg = end + 1;
-
-                count++;
-
+                const auto end  = next_sep(beg, line.data() + line.size(), sep);
                 // if we reach the end of line but still have fields to process
-                if(count != std::ssize(sch) and end == line.data() + line.size())
+                if(count != std::ssize(sch) and end == beg)
                 {
-                    std::cerr << "missing fields!!\n";
-                    std::exit(1);
+                    // fill the rest of the fields with nulls
+                    fill_nulls(i, sch, pos);
                 }
+                sch[p].del({beg, end}, sch[p].data);
+                beg = end + 1;
+                count++;
             }
             nread++;
         }
