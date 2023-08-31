@@ -28,7 +28,7 @@ int main()
         rsv::f("score"    , score)}
     );
 
-    rsv::read(file, schema, '\t');
+    auto report = rsv::read(file, schema, '\t');
 
     auto cols = rsv::columns(file, '\t');
     
@@ -45,5 +45,17 @@ int main()
                   << charge[i] << '\t'
                   << ascesions[i] << '\t'
                   << score[i] << '\n';
+    }
+
+    if(report.empty())
+    {
+        std::cout << "no problems while reading the file\n";
+    }
+    else
+    {
+        for(auto rec: report)
+        {
+            std::cout << "error at line " << rec.index << " column " << schema[rec.pos].name << "\n";
+        }
     }
 }

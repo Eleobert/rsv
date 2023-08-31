@@ -32,29 +32,29 @@ namespace rsv
 
                 if(ec != std::errc())
                 {
-                    std::cerr << "Error converting value '" << str << "'\n";
-                    std::exit(1);
+                    return false;
                 }
             }
 
-            return value;
+            return true;
         }
 
         template<typename T>
         #ifdef __cpp_lib_concepts
         requires (std::integral<T> || std::floating_point<T> || std::same_as<T, std::string>) && (!std::same_as<T, bool>)
         #endif
-        void delegate(const std::string_view& src, void* dst)
+        inline bool delegate(const std::string_view& src, void* dst)
         {
             auto* casted = static_cast<std::vector<T>*>(dst);;
-            casted->emplace_back(to_num<T>(src));
+            return casted->emplace_back(to_num<T>(src));
         }
 
         template<>
-        inline void delegate<std::string>(const std::string_view& src, void* dst)
+        inline bool delegate<std::string>(const std::string_view& src, void* dst)
         {
             auto* casted = static_cast<std::vector<std::string>*>(dst);;
             casted->emplace_back(src.begin(), src.end());
+            return true;
         }
 
         struct field
@@ -71,6 +71,13 @@ namespace rsv
         int64_t skip  = 0;
         int64_t nrows = std::numeric_limits<int64_t>::max();
         bool header   = true;
+    };
+
+    struct report_record
+    {
+        int64_t index = 0;
+        int64_t pos   = 0; // position relative to the schema
+        // reason = 
     };
 
     using schema = std::vector<internal::field>;
@@ -100,8 +107,8 @@ namespace rsv
     * @param sep the delimiter. The delimiter will be ignored if it appears witthin 
     * double quotes.
     */
-    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep = '\t', options opts = options()) -> void;
-    
+    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep = '\t', 
+        options opts = options()) -> std::vector<report_record>;
 
     template <typename T>
     auto f(const std::string& name, std::vector<T>& data)

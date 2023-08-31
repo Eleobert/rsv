@@ -168,13 +168,14 @@ namespace rsv
         return column_names;
     }
 
-    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep, options opts) -> void
+    auto read(std::ifstream& file, const std::vector<internal::field>& sch, char sep, options opts) -> std::vector<report_record>
     {
         file.seekg(0);
         assert(file.good());
-        auto pos   = find_positions(columns(file, sep), sch, opts.header);
-        auto line  = std::string();
-        auto nread = int64_t(0);
+        auto pos    = find_positions(columns(file, sep), sch, opts.header);
+        auto line   = std::string();
+        auto nread  = int64_t(0);
+        auto report = std::vector<report_record>();
 
         if(not opts.header)
         {
@@ -210,11 +211,17 @@ namespace rsv
                     // fill the rest of the fields with nulls
                     fill_nulls(i, sch, pos);
                 }
-                sch[p].del({beg, end}, sch[p].data);
+
+                if(not sch[p].del({beg, end}, sch[p].data))
+                {
+                    report.push_back({.index = nread, .pos = p});
+                }
+
                 beg = end + 1;
                 count++;
             }
             nread++;
         }
+        return report;
     }
 };
