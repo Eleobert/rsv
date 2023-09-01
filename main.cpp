@@ -13,7 +13,7 @@ int main()
     auto ascesions = std::vector<std::string>();
     auto score     = std::vector<float>();
 
-    auto [file, econd] = rsv::open("tst.tsv");
+    auto [file, econd] = rsv::open("sample.tsv");
 
     if(econd)
     {
