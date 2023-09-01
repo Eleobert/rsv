@@ -155,8 +155,9 @@ namespace rsv
 
     auto columns(std::ifstream& file, char sep) -> std::vector<std::string>
     {
+        file.clear();
         file.seekg(0);
-        assert(file.good());
+        //assert(file.good());
         auto line = std::string();
         std::getline(file, line);
 

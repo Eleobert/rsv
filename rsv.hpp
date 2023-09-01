@@ -113,22 +113,22 @@ namespace rsv
         options opts = options()) -> std::vector<report_record>;
 
     template <typename T>
-    auto f(const std::string& name, std::vector<T>& data)
+    auto f(const std::string& name, std::vector<T>& data, decltype(internal::delegate<std::string>)* del = nullptr)
     {
         auto this_field = internal::field();
         this_field.name = name;
         this_field.data = &data;
-        this_field.del  = internal::delegate<T>;
+        this_field.del  = (del)? del: internal::delegate<T>;
         return this_field;
     }
 
     template <typename T>
-    auto f(int64_t pos, std::vector<T>& data)
+    auto f(int64_t pos, std::vector<T>& data, decltype(internal::delegate<std::string>)* del = nullptr)
     {
         auto this_field = internal::field();
         this_field.pos  = pos;
         this_field.data = &data;
-        this_field.del  = internal::delegate<T>;
+        this_field.del  = (del)? del: internal::delegate<T>;
         return this_field;
     }
 }

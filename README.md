@@ -9,6 +9,12 @@ Creating a separated values parser is a straightforward task, but one that meets
 
 is considerably more difficult. This implementation successfully satisfies all these requirements.
 
+Compiling the example:
+
+```
+c++ main.cpp rsv.cpp -std=c++20 -g
+```
+
 ## Basic usage
 
 ```C++
