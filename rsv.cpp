@@ -129,6 +129,10 @@ auto fill_nulls(int64_t i, const rsv::schema& sch, std::vector<int64_t>& pos)
     for(; i < std::ssize(pos); i++)
     {
         auto p = pos[i];
+
+        if(p < 0)
+            continue;
+
         sch[p].del(std::string_view(), sch[p].data);
     }
 }
@@ -206,7 +210,7 @@ namespace rsv
 
                 const auto end  = next_sep(beg, line.data() + line.size(), sep);
                 // if we reach the end of line but still have fields to process
-                if(count != std::ssize(sch) and end == beg)
+                if(count != std::ssize(sch) and end == line.data() + line.size())
                 {
                     // fill the rest of the fields with nulls
                     fill_nulls(i, sch, pos);
