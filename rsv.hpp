@@ -13,7 +13,7 @@ namespace rsv
     namespace internal
     {
         template<typename T>
-        auto to_num(const std::string_view& str)
+        auto to_num(const std::string_view& str) -> std::tuple<T, bool>
         {
             T value = 0;
             
@@ -32,11 +32,11 @@ namespace rsv
 
                 if(ec != std::errc())
                 {
-                    return false;
+                    return {value, false};
                 }
             }
 
-            return true;
+            return {value, true};
         }
 
         template<typename T>
@@ -45,8 +45,10 @@ namespace rsv
         #endif
         inline bool delegate(const std::string_view& src, void* dst)
         {
-            auto* casted = static_cast<std::vector<T>*>(dst);;
-            return casted->emplace_back(to_num<T>(src));
+            auto* casted = static_cast<std::vector<T>*>(dst);
+            auto [num, success] = to_num<T>(src);
+            casted->emplace_back(num);
+            return success;
         }
 
         template<>
