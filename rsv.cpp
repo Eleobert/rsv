@@ -108,7 +108,7 @@ auto read_row(std::ifstream& file, std::string& row)
         }
         row += buffer;
     }
-    while(on_quote);
+    while(on_quote and not file.eof());
 
     return row;
 }
