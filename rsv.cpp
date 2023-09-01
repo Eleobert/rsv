@@ -91,26 +91,24 @@ auto next_sep(const char* beg, const char* end, char sep)
 
 auto read_row(std::ifstream& file, std::string& row)
 {
-    auto on_quote = false;
+    auto on_quote = int64_t(0);
+    auto buffer   = std::string();
 
     do
     {
-        auto buffer = std::string();
         std::getline(file, buffer);
+        
+        for(auto c: buffer)
+        {
+            on_quote += (c == '\"');
+        }
 
         if(not row.empty())
             row += '\n';
 
-        for(auto c: buffer)
-        {
-            if(c == '\"')
-                on_quote = !on_quote;
-        }
         row += buffer;
     }
-    while(on_quote and not file.eof());
-
-    return row;
+    while((on_quote % 2) and not file.eof());
 }
 
 
